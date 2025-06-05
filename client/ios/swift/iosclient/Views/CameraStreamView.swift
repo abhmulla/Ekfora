@@ -17,7 +17,7 @@ struct CameraStreamView: View {
         if let image = image {
             Image(image, scale: 1.0, orientation: .up, label: label)
         } else {
-            Color.black
+            Text("Not working")
         }
     }
 }
