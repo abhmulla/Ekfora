@@ -15,7 +15,9 @@ struct CameraStreamView: View {
     
     var body: some View {
         if let image = image {
-            Image(image, scale: 1.0, orientation: .up, label: label)
+            Image(image, scale: 1.0, orientation: .right, label: label)
+                .resizable()
+                .scaledToFit()
         } else {
             Text("Not working")
         }
