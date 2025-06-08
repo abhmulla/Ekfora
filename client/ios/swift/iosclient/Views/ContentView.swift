@@ -16,7 +16,7 @@ struct ContentView: View {
                 
             }
             .padding()
-            NavigationLink("Camera Stream", destination: CameraStreamView())
+            NavigationLink("Camera Stream", destination: CameraView())
         }
     }
 }

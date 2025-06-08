@@ -22,7 +22,7 @@ class CameraCapture: NSObject, ObservableObject {
     private let sessionQueue = DispatchQueue(label: "sessionQueue") // Thread safe
     
     private let context = CIContext()
-    
+        
     var isAuthorized: Bool {
         get async {
             let status = AVCaptureDevice.authorizationStatus(for: .video)
@@ -44,16 +44,35 @@ class CameraCapture: NSObject, ObservableObject {
         
         super.init()
         // Get permission to access the camera
+        //checkPermission()
         Task{
             permission = await isAuthorized
+            }
+            // Setup capture session
+            sessionQueue.async { [unowned self] in
+                self.setUpCaptureSession()
+                self.session.startRunning()
         }
-        
-        // Setup capture session
-        sessionQueue.async { [unowned self] in
-            self.setUpCaptureSession()
-            self.session.startRunning()
+        print(Thread.isMainThread)  // Debugger
+    }
+    
+    // Another method for testing
+    func checkPermission() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+            case .authorized:
+                permission = true
+            case .notDetermined:
+                requestPermission()
+            
+        default:
+            permission = false
         }
-        
+    }
+    
+    func requestPermission() {
+        AVCaptureDevice.requestAccess(for: .video) { [unowned self] granted in
+            self.permission = granted
+        }
     }
 
     func setUpCaptureSession() {
@@ -64,15 +83,20 @@ class CameraCapture: NSObject, ObservableObject {
         guard permission else { return }    // Check if we have permission
         
         // Device that will be used as input for out session
-        let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera,
-                                                  for: .video, position: .unspecified)
-        
+        //guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .unspecified) else {return}
+        var videoDevice:AVCaptureDevice
+            if let device = AVCaptureDevice.default(.builtInDualCamera, for: .video, position: .back){
+                videoDevice = device
+            } else if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
+                videoDevice = device
+            } else {
+                fatalError("Missing expected back camera device")
+            }
+                
         // Set up capture input with our session
-        guard
-            let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice!),
-            session.canAddInput(videoDeviceInput)
-            else { return }
-            session.addInput(videoDeviceInput)
+        guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice) else {return}
+        guard session.canAddInput(videoDeviceInput) else {return}
+        session.addInput(videoDeviceInput)
         
         // sampleBufferDelegate is an object that receives media frames from a capture session
         // Called when a new frame or sample buffer is available
