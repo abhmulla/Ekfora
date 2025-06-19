@@ -9,14 +9,17 @@ import Foundation
 import AVFoundation
 import SwiftUI
 import CoreImage
+import UIKit  // for streamImage
 
 class CameraCapture: NSObject, ObservableObject {
-    
+        
     @Published var frame: CGImage?
     
     private var permission: Bool = false    // Do we have permission to use the camera?
     
     private let session = AVCaptureSession()    // Define the AVCaptureSession
+    
+    private let streamsession = StreamManager()
     
     // sessionQueue allows us to run the session on a background thread
     private let sessionQueue = DispatchQueue(label: "sessionQueue") // Thread safe
@@ -53,7 +56,6 @@ class CameraCapture: NSObject, ObservableObject {
                 self.setUpCaptureSession()
                 self.session.startRunning()
         }
-        print(Thread.isMainThread)  // Debugger
     }
     
     // Another method for testing
@@ -106,6 +108,9 @@ class CameraCapture: NSObject, ObservableObject {
         
         // Connect the output
         session.addOutput(videoOutput)
+        
+        // start stream
+        streamsession.connect()
     }
     
 }
@@ -144,6 +149,11 @@ extension CameraCapture: AVCaptureVideoDataOutputSampleBufferDelegate {
         // Convert CIImage to CGImage
         // CGImage allows us to convert to UIImage to display
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return nil }
+        
+//        let streamImage = UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.9)!
+//        streamsession.stream(streamImage)
+        let jpeg = UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.9)!
+        self.streamsession.send(jpeg)
         
         return cgImage
     }
