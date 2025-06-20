@@ -21,7 +21,8 @@ class StreamManager: NSObject, URLSessionDelegate, StreamDelegate, URLSessionWeb
     private var webSocket : URLSessionWebSocketTask?
     
     func connect() {
-        let url = URL(string: "ws://192.168.1.79:7890")!
+        //192.168.1.79
+        let url = URL(string: "ws://172.20.10.3:7890")!
         
 //        lazy var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval:  10)
 //        request.httpMethod = "POST"
