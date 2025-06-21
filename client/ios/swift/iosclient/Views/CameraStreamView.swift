@@ -20,7 +20,7 @@ struct CameraStreamView: View {
                 .resizable()
                 .scaledToFit()
         } else {
-            Text("Not working")
+            ProgressView("Loading...")
         }
     }
 }

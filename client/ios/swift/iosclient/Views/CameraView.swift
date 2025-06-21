@@ -14,6 +14,9 @@ struct CameraView: View {
     var body: some View {
         
         CameraStreamView(image: model.frame)
+            .task {
+                model.setUpCaptureSession()
+            }
     }
 }
 
