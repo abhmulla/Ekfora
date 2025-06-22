@@ -22,7 +22,7 @@ class StreamManager: NSObject, URLSessionDelegate, StreamDelegate, URLSessionWeb
     
     func connect() {
         //192.168.1.79
-        let url = URL(string: "ws://172.20.10.3:7890")!
+        let url = URL(string: "ws://192.168.1.27:7890")!
         
 //        lazy var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval:  10)
 //        request.httpMethod = "POST"
