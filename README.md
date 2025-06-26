@@ -2,45 +2,21 @@
 
 Hello! This is a project in the works...
 
-> ⚡ A modular device-to-server computation offloading framework with multi-device support.
+> A modular device-to-server computation offloading framework with multi-device support.
 
-Ekfora (ἐκφορά — "offloading" in Ancient Greek) is a research-driven personal project aimed at building a flexible, real-time pipeline that offloads heavy computation (like deep learning inference) from edge devices to more capable servers — **across phones, laptops, drones, and sensors**.
+Ekfora (ἐκφορά — "offloading" in Ancient Greek) is a research-driven project aimed at building a flexible, real-time pipeline that offloads heavy computation (like deep learning inference) from edge devices to more capable servers, **across phones, laptops, drones, and sensors**.
 
 We’re entering a world where smart cameras, wearables, and edge agents are everywhere—but not all of them can run YOLO or Whisper on-device. Ekfora is designed to make **seamless, low-latency offloading** of vision and sensor tasks simple, fast, and extensible.
 
 ---
 
-## Project Direction
-
-Ekfora is structured in **three concrete phases**, each building on the previous to move from a targeted demo into a generalizable framework:
-
-### Phase 1 — Concrete Demo (**IN PROGRESS**)
+### Phase 1 
 - Offload live camera feed from an iPhone to a laptop over Wi-Fi.
-- Run **YOLOv8 object detection** on the laptop.
+- Run **YOLOv11 object detection** on the laptop.
 - Send back bounding boxes and **visualize the result** either on the laptop or phone.
 - Focused on measurable metrics: **latency, FPS, battery savings**.
 
 > This README corresponds to **Phase 1 work**.
-
----
-
-### Phase 2 — Core Library Extraction
-- Abstract the send/receive logic into a clean library.
-- Generalize the interface to support:
-  - Object detection
-  - Image classification
-  - Audio transcription
-- Build support for **multiple concurrent clients**.
-- Add hooks for different models (YOLO, Whisper, etc.).
-
----
-
-### Phase 3 — Multi-Device Use Cases
-- Laptop ➝ Laptop: multi-camera fusion.
-- iPhone ➝ Laptop: personal assistant.
-- Drone/Phone Swarm ➝ Central Server: parallel edge processing.
-- Introduce a **router module** to manage connections and routes.
-- Extend protocol layer (WebRTC, QUIC, Protobuf support).
 
 ---
 
