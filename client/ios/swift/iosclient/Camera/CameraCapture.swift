@@ -19,6 +19,14 @@ class CameraCapture: NSObject, ObservableObject {
     
     private let session = AVCaptureSession()    // Define the AVCaptureSession
     
+    private var videoDevice: AVCaptureDevice? = nil
+    
+    private var frameRate: Int32 = 13
+    
+    private var lastSentTime = Date()  // For frame throttle
+    
+    private var minFrameInterval: TimeInterval = 1.0/10.0
+        
     private let streamsession = StreamManager()
     
     // sessionQueue allows us to run the session on a background thread
@@ -76,12 +84,44 @@ class CameraCapture: NSObject, ObservableObject {
             self.permission = granted
         }
     }
-
+    
+    /// Sets the frame rate for the device.
+    ///
+    /// - Parameter fps: Desired frame rate
+    func setFrameRate(_ fps: Int32) {
+        guard let videoDevice = self.videoDevice else {
+            fatalError("videoDevice is nil when setting frame rate")
+        }
+        do {
+            let ranges = videoDevice.activeFormat.videoSupportedFrameRateRanges
+            guard let frameRateRange = ranges.first else {
+                print("No supported frame rate range available")
+                return
+            }
+            
+            try videoDevice.lockForConfiguration()
+            
+            if Int32(frameRateRange.minFrameRate) <= fps && fps <= Int32(frameRateRange.maxFrameRate) {
+                let frameDuration = CMTime(value: 1, timescale: Int32(fps))
+                videoDevice.activeVideoMinFrameDuration = frameDuration
+                videoDevice.activeVideoMaxFrameDuration = frameDuration
+            } else {
+                fatalError("Desired frame rate not supported by this device")
+            }
+            
+            videoDevice.unlockForConfiguration()
+        }
+        catch {
+            print("Error locking device for configuration: \(error.localizedDescription)")
+        }
+    }
+    
     func setUpCaptureSession() {
         
         // AVCaptureVideoDataOutput is an object that receives raw video frames from the camera.
         let videoOutput = AVCaptureVideoDataOutput()    // Output to process frames
-        
+        videoOutput.alwaysDiscardsLateVideoFrames = true  // Indicates whether to drop video frames if they arrive late.
+
         guard permission else { return }    // Check if we have permission
         
         // Device that will be used as input for out session
@@ -94,7 +134,11 @@ class CameraCapture: NSObject, ObservableObject {
             } else {
                 fatalError("Missing expected back camera device")
             }
-                
+        self.videoDevice = videoDevice
+        
+        // Set frame rate
+        setFrameRate(self.frameRate)
+
         // Set up capture input with our session
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice) else {return}
         guard session.canAddInput(videoDeviceInput) else {return}
@@ -112,6 +156,24 @@ class CameraCapture: NSObject, ObservableObject {
         // start stream
         streamsession.connect()
     }
+    
+    /*
+        Lower the frame rate for the capture device to recover from slow processing.
+     
+        Note: the new rate must be a value supported by one of the device's active formats.
+    */
+//    func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+//        
+//            self.session.beginConfiguration()
+//            
+//            // Lower the min and max frame rate to recover from slow processing
+//            self.frameRate = max(self.frameRate - 1, 1)
+//            
+//            setFrameRate(self.frameRate)
+//            
+//            self.session.commitConfiguration()
+//    }
+
     
 }
 
@@ -150,11 +212,14 @@ extension CameraCapture: AVCaptureVideoDataOutputSampleBufferDelegate {
         // CGImage allows us to convert to UIImage to display
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return nil }
         
-//        let streamImage = UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.9)!
-//        streamsession.stream(streamImage)
-        let jpeg = UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.9)!
-        self.streamsession.send(jpeg)
-        
+        // Throttle sending
+        let now = Date()
+        if now.timeIntervalSince(lastSentTime) >= minFrameInterval {
+            lastSentTime = now
+            let jpeg = UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.4)!
+            self.streamsession.send(jpeg)
+        }
+                
         return cgImage
     }
 }
