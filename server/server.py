@@ -10,7 +10,7 @@ print("Server listening to port " + str(PORT))
 async def echo(websocket):
     print("Client connected")
     async for message in websocket:
-        print("Message received from client")
+        #print("Message received from client")
         
         message = np.frombuffer(message, dtype=np.uint8)
 
